@@ -138,6 +138,8 @@ ifneq (, $(shell which pkg-config))
     CFLAGS += -DXLUA $(shell pkg-config --cflags lua)
     ifneq ($(shell uname -s),Darwin)
       LDLIBS += $(shell pkg-config --libs lua) -Wl,--export-dynamic
+      #LDLIBS += $(shell pkg-config --libs lua-5.1) -Wl,--export-dynamic
+      #LDLIBS += $(shell pkg-config --libs lua-5.1) -Wl
     else
       LDLIBS += $(shell pkg-config --libs lua) -rdynamic
     endif
@@ -175,62 +177,62 @@ OBJS = $(patsubst %.c, %.o, $(wildcard *.c) $(wildcard actions/*.c) $(wildcard f
 all : $(name)
 
 install :
-	install -d $(DESTDIR)$(prefix)/bin
-	install $(name) $(DESTDIR)$(prefix)/bin/$(name)
-	install scopen $(DESTDIR)$(prefix)/bin/scopen
-	install -d $(DESTDIR)$(HELPDIR)
-	install -m 644 doc $(DESTDIR)$(HELPDIR)/$(name)_help
-	install -m 644 $(wildcard plot_*) $(DESTDIR)$(HELPDIR)/
-	install -d $(DESTDIR)$(MANDIR)/
-	install -m 644 sc-im.1 $(DESTDIR)$(MANDIR)/$(name).1
+  install -d $(DESTDIR)$(prefix)/bin
+  install $(name) $(DESTDIR)$(prefix)/bin/$(name)
+  install scopen $(DESTDIR)$(prefix)/bin/scopen
+  install -d $(DESTDIR)$(HELPDIR)
+  install -m 644 doc $(DESTDIR)$(HELPDIR)/$(name)_help
+  install -m 644 $(wildcard plot_*) $(DESTDIR)$(HELPDIR)/
+  install -d $(DESTDIR)$(MANDIR)/
+  install -m 644 sc-im.1 $(DESTDIR)$(MANDIR)/$(name).1
 
 uninstall :
-	-rm $(DESTDIR)$(prefix)/bin/$(name)
-	-rm $(DESTDIR)$(HELPDIR)/$(name)_help
-	-rm $(DESTDIR)$(HELPDIR)/plot*
-	-rm $(DESTDIR)$(MANDIR)/$(name).1
+  -rm $(DESTDIR)$(prefix)/bin/$(name)
+  -rm $(DESTDIR)$(HELPDIR)/$(name)_help
+  -rm $(DESTDIR)$(HELPDIR)/plot*
+  -rm $(DESTDIR)$(MANDIR)/$(name).1
 
 $(name) : $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+  $(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 $(name)qref: sc.h
-	$(CC) $(CFLAGS) $(LDFLAGS) -DQREF $(QREF_FMT) -DSCNAME=\"$(name)\" -o $(name)qref help.c $(LDLIBS)
+  $(CC) $(CFLAGS) $(LDFLAGS) -DQREF $(QREF_FMT) -DSCNAME=\"$(name)\" -o $(name)qref help.c $(LDLIBS)
 
 $(OBJS) : y.tab.h experres.h statres.h
 
 .INTERMEDIATE: y.tab.c
-y.tab.c	: gram.y
-	$(YACC) -d $<
+y.tab.c : gram.y
+  $(YACC) -d $<
 
 gram.c : y.tab.c
-	mv $< $@
+  mv $< $@
 
 y.tab.h : gram.y | gram.c
 
 experres.h : gram.y eres.sed
-	sed -f eres.sed < $< > $@
+  sed -f eres.sed < $< > $@
 
 statres.h : gram.y sres.sed
-	sed -f sres.sed < $< > $@
+  sed -f sres.sed < $< > $@
 
 pvmtbl.o: sc.h pvmtbl.c
-	$(CC) ${CFLAGS} -c -DPSC pvmtbl.c
+  $(CC) ${CFLAGS} -c -DPSC pvmtbl.c
 
 docs:
-	doxygen Doxyfile
+  doxygen Doxyfile
 
 man_install:
-	@cp -r ../docs/man/man3/ /usr/local/share/man/
-	mandb
+  @cp -r ../docs/man/man3/ /usr/local/share/man/
+  mandb
 
 # "sc-im" MUST match what is in Doxyfile `MAN_EXTENSION = .sc-im.3`
 man_uninstall:
-	@rm -rf /usr/local/share/man/man3/*sc-im.3
-	@mandb
+  @rm -rf /usr/local/share/man/man3/*sc-im.3
+  @mandb
 
 clean:
-	rm -f $(OBJS)
-	rm -f experres.h statres.h y.tab.h
-	rm -f core gram.c y.output pxmalloc.c pvmtbl.c tags $(name)qref
-	rm -f qhelp.c $(name)
-	rm -rf ../docs/ 
+  rm -f $(OBJS)
+  rm -f experres.h statres.h y.tab.h
+  rm -f core gram.c y.output pxmalloc.c pvmtbl.c tags $(name)qref
+  rm -f qhelp.c $(name)
+  rm -rf ../docs/ 
